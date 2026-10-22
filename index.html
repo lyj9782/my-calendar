@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>달력</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+body{font-family:'Malgun Gothic',sans-serif;background:#f4f5f7;margin:0;padding:20px;text-align:center}
+#cal{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;background:#fff;padding:20px;border-radius:12px;max-width:1100px;margin:auto}
+.m{width:300px}.m h3{margin:6px 0 10px}
+.g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.h{font-weight:bold;font-size:13px;padding:4px 0}
+.d{padding:8px 0;border-radius:6px;cursor:pointer;user-select:none;background:#f0f1f3}
+.d:hover{background:#dde3ea}.sun{color:#e03131}.sat{color:#1c7ed6}
+.d.on{background:#ff922b;color:#fff;font-weight:bold}
+button{margin:20px 6px;padding:12px 28px;font-size:16px;border:0;border-radius:8px;cursor:pointer;background:#fee500;font-weight:bold}
+#reset{background:#dee2e6}#msg{color:#555;font-size:14px}
+</style></head><body>
+<div id="cal"></div>
+<button id="share">카카오톡으로 공유</button><button id="reset">선택 초기화</button>
+<div id="msg"></div>
+<script>
+const months=[[2026,10],[2026,11],[2026,12],[2027,1],[2027,2]];
+const KEY='mycal-selected';let sel=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'));
+const cal=document.getElementById('cal');
+months.forEach(([y,m])=>{
+ const box=document.createElement('div');box.className='m';
+ box.innerHTML=`<h3>${y}년 ${m}월</h3>`;const g=document.createElement('div');g.className='g';
+ '일월화수목금토'.split('').forEach((w,i)=>{g.innerHTML+=`<div class="h ${i==0?'sun':i==6?'sat':''}">${w}</div>`});
+ const first=new Date(y,m-1,1).getDay(),n=new Date(y,m,0).getDate();
+ for(let i=0;i<first;i++)g.appendChild(document.createElement('div'));
+ for(let d=1;d<=n;d++){const c=document.createElement('div'),id=`${y}-${m}-${d}`,w=(first+d-1)%7;
+  c.className='d'+(w==0?' sun':w==6?' sat':'')+(sel.has(id)?' on':'');c.textContent=d;
+  c.onclick=()=>{c.classList.toggle('on');c.classList.contains('on')?sel.add(id):sel.delete(id);localStorage.setItem(KEY,JSON.stringify([...sel]))};
+  g.appendChild(c)}
+ box.appendChild(g);cal.appendChild(box)});
+document.getElementById('reset').onclick=()=>{sel.clear();localStorage.removeItem(KEY);document.querySelectorAll('.d.on').forEach(e=>e.classList.remove('on'))};
+const msg=t=>document.getElementById('msg').textContent=t;
+document.getElementById('share').onclick=async()=>{
+ const canvas=await html2canvas(cal,{scale:2,backgroundColor:'#fff'});
+ const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+ const file=new File([blob],'달력.png',{type:'image/png'});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'달력'});return}catch(e){if(e.name==='AbortError')return}}
+ try{await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);msg('달력 이미지가 복사됐어요. 카카오톡 단톡방에서 Ctrl+V 하면 바로 보내져요.')}
+ catch(e){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='달력.png';a.click();msg('달력.png를 저장했어요. 단톡방에 끌어다 놓으면 돼요.')}
+};
+</script></body></html>
