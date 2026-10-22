@@ -20,7 +20,7 @@ button{margin:20px 6px;padding:12px 28px;font-size:16px;border:0;border-radius:8
 <div id="msg"></div>
 <script>
 const months=[[2026,10],[2026,11],[2026,12],[2027,1],[2027,2]];
-const KEY='mycal-selected';let sel=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'));
+const KEY='mycal-selected';let sel=new Set();localStorage.removeItem(KEY);
 const cal=document.getElementById('cal');
 months.forEach(([y,m])=>{
  const box=document.createElement('div');box.className='m';
@@ -30,7 +30,7 @@ months.forEach(([y,m])=>{
  for(let i=0;i<first;i++)g.appendChild(document.createElement('div'));
  for(let d=1;d<=n;d++){const c=document.createElement('div'),id=`${y}-${m}-${d}`,w=(first+d-1)%7;
   c.className='d'+(w==0?' sun':w==6?' sat':'')+(sel.has(id)?' on':'');c.textContent=d;c.dataset.id=id;
-  c.onclick=()=>{c.classList.toggle('on');c.classList.contains('on')?sel.add(id):sel.delete(id);localStorage.setItem(KEY,JSON.stringify([...sel]))};
+  c.onclick=()=>{c.classList.toggle('on');c.classList.contains('on')?sel.add(id):sel.delete(id)};
   g.appendChild(c)}
  box.appendChild(g);cal.appendChild(box)});
 const API='https://api.restful-api.dev/objects/ff808181a09d98f701a16213e1294e36';let saved={};
@@ -39,7 +39,7 @@ const NETERR='인터넷 연결을 확인하고 잠시 후 다시 시도해 주�
 async function load(){const r=await fetch(API,{cache:'no-store'});if(!r.ok)throw r.status;const j=await r.json();return (j.data&&j.data.entries)||{}}
 async function put(e){const r=await fetch(API,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'mycal',data:{entries:e}})});if(!r.ok)throw r.status}
 async function refresh(){try{saved=await load();render()}catch(e){msg('저장된 목록을 불러오지 못했어요. '+NETERR)}}
-function show(list){sel=new Set(list);localStorage.setItem(KEY,JSON.stringify(list));
+function show(list){sel=new Set(list);
  document.querySelectorAll('.d').forEach(c=>c.classList.toggle('on',sel.has(c.dataset.id)))}
 function render(){const box=document.getElementById('saved');box.innerHTML='';
  Object.keys(saved).forEach(n=>{const b=document.createElement('button');b.textContent=n;
